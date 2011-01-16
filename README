@@ -1,12 +1,15 @@
 
 Ruby/GD2 - Ruby binding for Thomas Boutell's gd 2.x graphics library
-Copyright (C) 2005-2006 Robert Leslie <rob@mars.org>
+Copyright (C) 2005-2006 Robert Leslie <rob@mars.org> and 
+Copyright (C) 2011 Jonas Tingeborn <tinjon@gmail.com>
 
-I wrote this Ruby library because I wasn't satisfied with the existing
+Robert wrote this Ruby library because he wasn't satisfied with the existing
 Ruby/GD extension library. Among other things, it had no support for
-creating images from PNG or JPEG data already in memory.
+creating images from PNG or JPEG data already in memory. Jonas migrated the
+library glue from DL to FFI since A) it crashed on Windows and B) DL doesn't 
+work well in jRuby.
 
-Ruby/GD2 is 100% Ruby and uses dl to link with the gd shared library. Most
+Ruby/GD2 is 100% Ruby and uses FFI to link with the gd shared library. Most
 of the gd API is supported in some way, however the interface is quite
 different so that we can do things The Ruby Way as much as possible.
 
