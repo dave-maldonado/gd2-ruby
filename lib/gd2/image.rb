@@ -120,7 +120,7 @@ module GD2
       ptr = SYM[create[type]].call(*args)[0]
       raise LibraryError unless ptr
 
-      init_image_ptr(ptr)
+      ptr = init_image_ptr(ptr)
 
       image = (image_true_color?(ptr) ?
         TrueColor : IndexedColor).allocate.init_with_image(ptr)
@@ -190,38 +190,21 @@ module GD2
         }[format]
         raise UnrecognizedImageTypeError,
           'Format (or file extension) is not recognized' unless create_sym
-        ptr = File.open(filename, 'rb') { |file| SYM[create_sym].call(file)[0] }
+        #ptr = File.open(filename, 'rb') { |file| SYM[create_sym].call(file)[0] }
+        ptr = Native.open(filename, 'rb') { |file| SYM[create_sym].call(file)[0] }
       end
       raise LibraryError unless ptr
 
-      init_image_ptr(ptr)
+      struct = init_image_ptr(ptr)
 
-      image = (image_true_color?(ptr) ?
-        TrueColor : IndexedColor).allocate.init_with_image(ptr)
+      image = (image_true_color?(struct) ?
+        TrueColor : IndexedColor).allocate.init_with_image(struct)
 
       block_given? ? yield(image) : image
     end
 
     def self.init_image_ptr(ptr)  #:nodoc:
-      ptr.size = 7268
-      ptr.free = SYM[:gdImageDestroy]
-
-      c_ary = 'I' * MAX_COLORS
-      eval %{
-        ptr.struct!("PIII#{c_ary}#{c_ary}#{c_ary}#{c_ary}"  \
-                   "IPIPP#{c_ary}#{c_ary}IIPII#{c_ary}IPII",
-          :pixels, :sx, :sy, :colorsTotal,
-      } + Array.new(MAX_COLORS) { |i| ":\"red[#{i}]\", " }.join('') +
-          Array.new(MAX_COLORS) { |i| ":\"green[#{i}]\", " }.join('') +
-          Array.new(MAX_COLORS) { |i| ":\"blue[#{i}]\", " }.join('') +
-          Array.new(MAX_COLORS) { |i| ":\"open[#{i}]\", " }.join('') + %{
-          :transparent, :polyInts, :polyAllocated, :brush, :tile,
-      } + Array.new(MAX_COLORS) { |i| ":\"brushColorMap[#{i}]\", " }.join('') +
-          Array.new(MAX_COLORS) { |i| ":\"tileColorMap[#{i}]\", " }.join('') + %{
-          :styleLength, :stylePos, :style, :interlace, :thick,
-      } + Array.new(MAX_COLORS) { |i| ":\"alpha[#{i}]\", " }.join('') + %{
-          :trueColor, :tpixels, :alphaBlendingFlag, :saveAlphaFlag)
-      }
+       GdImageStruct.new ptr
     end
 
     def self.image_true_color?(ptr)
@@ -480,10 +463,11 @@ module GD2
       raise ArgumentError, "Unrecognized options #{options.inspect}" unless
         options.empty?
 
-      File.open(filename, 'wb') do |file|
+      #File.open(filename, 'wb') do |file|
+      Native.open(filename, 'wb') do |file|
         args[args[0].nil? ? 0 : 1] = file
         SYM[write_sym].call(image_ptr, *args)
-        file.pos
+        #file.pos
       end
     end
 

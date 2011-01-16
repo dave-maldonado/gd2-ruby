@@ -20,7 +20,7 @@
 # 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-require 'dl'
+require 'ffi'
 require 'rbconfig'
 
 module GD2
@@ -55,7 +55,82 @@ module GD2
 
   private_class_method :gd_library_name, :name_for_symbol
 
-  LIB = DL.dlopen(gd_library_name)
+  MAX_COLORS        = 256
+
+  class Native
+    def self.open(fn,mode="rb")
+      ptr = LIBC.fopen(fn,mode)
+      raise "failed to open #{fn}" unless ptr > 0
+      if block_given?
+        begin
+          yield FFI::Pointer.new(ptr)
+        ensure
+          LIBC.fclose(ptr)
+        end
+      else
+        ptr
+      end
+    end
+    def close(ptr)
+      LIBC.fclose(ptr)
+    end
+  end
+
+  class GdImageStruct < FFI::ManagedStruct
+    layout :pixels,            :pointer,
+           :sx,                :int,
+           :sy,                :int,
+           :colorsTotal,       :int,
+           :red,               [:int, MAX_COLORS],
+           :green,             [:int, MAX_COLORS],
+           :blue,              [:int, MAX_COLORS],
+           :open,              [:int, MAX_COLORS],
+           :transparent,       :int,
+           :polyInts,          :pointer,
+           :polyAllocated,     :int,
+           :brush,             :pointer,
+           :tile,              :pointer,
+           :brushColorMap,     [:int, MAX_COLORS],
+           :tileColorMap,      [:int, MAX_COLORS],
+           :styleLength,       :int,
+           :stylePos,          :int,
+           :style,             :pointer,
+           :interlace,         :int,
+           :thick,             :int,
+           :alpha,             [:int, MAX_COLORS],
+           :trueColor,         :int,
+           :tpixels,           :pointer,
+           :alphaBlendingFlag, :int,
+           :saveAlphaFlag,     :int
+    def self.release(ptr)
+        #puts "Destroying GdImageStruct: #{ptr}"
+        SYM[:gdImageDestroy].call(ptr)
+    end
+  end
+
+  DL_TO_FFI_TYPES = {
+    "0" => :void,
+    "A" => :pointer,
+    "a" => :pointer,
+    "D" => :double,
+    "I" => :int,
+    "i" => :pointer,
+    "P" => :pointer,
+    "S" => :string
+  }
+
+  module LIBC
+    extend FFI::Library
+    ffi_lib FFI::Library::LIBC
+    attach_function :fopen, [:string, :string], :int
+    attach_function :fclose, [:int], :int
+  end
+  
+  module LIB
+    extend FFI::Library
+  end
+  LIB.send :ffi_lib, gd_library_name
+
   SYM = {
     :gdImageCreate                      => 'PII',
     :gdImageCreateTrueColor             => 'PII',
@@ -147,13 +222,17 @@ module GD2
     :gdFontCacheShutdown                => '0',
     :gdFTUseFontConfig                  => 'II',
     :gdFree                             => '0P'
-  }.inject({}) { |x, (k, v)| 
+  }.inject({}) { |x, (symbol, signature)| 
+    func = name_for_symbol(symbol, signature)
+    args = signature.split("").map{|c| DL_TO_FFI_TYPES[c] }
+    ret  = args.shift
     begin
-      x[k] = LIB[name_for_symbol(k, v), v]
-    rescue
-      x[k] = LIB["_" + name_for_symbol(k, v), v]
+      LIB.send :attach_function, symbol, func.to_sym, args, ret
+    rescue FFI::NotFoundError
+      LIB.send :attach_function, symbol, "_#{func}".to_sym, args, ret
     end
-    x 
+    x[symbol] = LIB.method(symbol)
+    x
   }
 
   # Bit flags for Image#compare
@@ -175,7 +254,7 @@ module GD2
 
   # Color constants
 
-  MAX_COLORS        = 256
+# MAX_COLORS        = 256
 
   RGB_MAX           = 255
 
