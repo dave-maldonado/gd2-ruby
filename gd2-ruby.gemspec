@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Ruby/GD2}
   spec.description   = %q{Ruby binding for Thomas Boutell's gd 2.x graphics library}
   spec.homepage      = "https://github.com/jojje/gd2-ruby"
-  spec.license       = "MIT"
+  spec.license       = "GPL"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
