@@ -1,4 +1,3 @@
-
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
@@ -10,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Rob Leslie"]
   spec.email         = ["rob@mars.org"]
   spec.summary       = %q{Ruby/GD2}
-  spec.description   = %Q{Ruby binding for Thomas Boutell's gd 2.x graphics library}
+  spec.description   = %q{Ruby binding for Thomas Boutell's gd 2.x graphics library}
   spec.homepage      = "https://github.com/jojje/gd2-ruby"
   spec.license       = "GPL"
 
