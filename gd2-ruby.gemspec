@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["rob@mars.org"]
   spec.summary       = %q{Ruby/GD2}
   spec.description   = %q{Ruby binding for Thomas Boutell's gd 2.x graphics library}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/jojje/gd2-ruby"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
