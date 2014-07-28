@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Gd2::Ruby::VERSION
   spec.authors       = ["Rob Leslie"]
   spec.email         = ["rob@mars.org"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{Ruby/GD2}
+  spec.description   = %q{Ruby binding for Thomas Boutell's gd 2.x graphics library}
   spec.homepage      = ""
   spec.license       = "MIT"
 
